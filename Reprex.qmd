@@ -1,0 +1,104 @@
+---
+title: "Dynamic Table Captions"
+author: "Jon Peake"
+format: html
+editor: visual
+---
+
+## Example 1: from a column value
+
+If the information for our dynamic caption is contained within a column in the dataset (say, a single static column for the species or gear), we can extract the information from the columns of interest. Let's create a dataset with a constant species and gear.
+
+```{r}
+#| label: createdata_colval
+# Create a dummy dataset
+dat <- data.frame(species = rep('Mycteroperca microlepis', 10),
+                  gear = rep('Hook and line',10),
+                  age = 1:10,
+                  size = seq(1,100,10))
+
+write.csv(dat, file = 'dat_colval.csv',row.names = F)
+```
+
+We can make a dynamic label in a few ways. If a caption with a similar format is going to be used multiple times throughout the document, it might be easiest to make this a function. Otherwise, we can just use a standard call to `paste`:
+
+```{r}
+# Make dynamic label
+# read in the data file
+dat <- read.csv('dat_colval.csv')
+
+# extract the species name
+spp <- unique(dat$species)
+
+# extract the gear
+gear <- unique(dat$gear)
+
+# paste together the caption
+cap <- paste('Age and length of',
+             spp,
+             'from',
+             gear)
+cap
+```
+
+We can assign the caption using the `#| tbl-cap` option in our table code chunk. To input an r variable, we use the following notation:
+
+```         
+#| tbl-cap: !expr cap
+```
+
+By using `!expr` we can insert an R variable or even a full expression into the caption. This example inserts the value of `cap` into the caption.
+
+```{r}
+#| label: tbl-colval
+#| tbl-cap: !expr cap
+
+# Make table using kable
+library(knitr)
+kable(dat)
+```
+
+## Example 2: from a column header
+
+If instead our dynamic information is in a column header, we can use the `colnames` function to extract the appropriate information. This may be useful if the structure of the data is constant but a value column changes names across datasets.
+
+```{r}
+#| label: createdata_colname
+# Create a dummy dataset
+dat <- data.frame(species = rep('Mycteroperca microlepis', 10),
+                  SL = 1:10,
+                  FL = 1:10)
+
+write.csv(dat, file = 'dat_colname.csv',row.names = F)
+```
+
+```{r}
+# Make dynamic label
+# read in the data file
+dat <- read.csv('dat_colname.csv')
+
+# extract the species name
+spp <- unique(dat$species)
+
+# extract the length types
+param_1 <- colnames(dat)[2]
+
+param_2 <- colnames(dat)[3]
+
+# paste together the caption
+cap <- paste(spp,
+             param_1,
+             'vs.',
+             param_2
+             )
+cap
+```
+
+```{r}
+#| label: fig-colname
+#| fig-cap: !expr cap
+
+# Make plot using ggplot
+library(ggplot2)
+ggplot(dat) + geom_point(aes(x = SL, y = FL))
+```
