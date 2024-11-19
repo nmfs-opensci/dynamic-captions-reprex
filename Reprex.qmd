@@ -13,9 +13,9 @@ If the information for our dynamic caption is contained within a column in the d
 #| label: createdata_colval
 # Create a dummy dataset
 dat <- data.frame(species = rep('Mycteroperca microlepis', 10),
-                  gear = rep('Hook and line',10),
-                  age = 1:10,
-                  size = seq(1,100,10))
+                  gear = rep(c('HL','LL','SP','UA'),5),
+                  age = 1:20,
+                  size = seq(1,100,5))
 
 write.csv(dat, file = 'dat_colval.csv',row.names = F)
 ```
@@ -25,19 +25,33 @@ We can make a dynamic label in a few ways. If a caption with a similar format is
 ```{r}
 # Make dynamic label
 # read in the data file
-dat <- read.csv('dat_colval.csv')
+library(tidyverse)
+dat <- read.csv('dat_colval.csv') %>%
+  mutate(gear = factor(gear),
+         gear_name = factor(case_when(gear == 'HL' ~ 'hook and line',
+                               gear == 'LL' ~ 'longline',
+                               gear == 'SP' ~ 'spear',
+                               gear == 'UA' ~ 'unassigned gear code')))
+  
 
 # extract the species name
 spp <- unique(dat$species)
 
 # extract the gear
-gear <- unique(dat$gear)
+gear <- levels(dat$gear)
+
+gear_name <- levels(dat$gear_name)
+
+gear_caption_string <- paste0(gear_name,' (',gear,')')
 
 # paste together the caption
-cap <- paste('Age and length of',
+cap <- paste0('Age and length of ',
              spp,
-             'from',
-             gear)
+             ' from ',
+             paste(gear_caption_string[-length(gear_caption_string)],collapse = ', '),
+             ', and ',
+             gear_caption_string[length(gear_caption_string)],
+             '.')
 cap
 ```
 
